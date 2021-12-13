@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rogero.ReactiveSourceGenerator.Attributes\Rogero.ReactiveSourceGenerator.Attributes.csproj" />
+    <ProjectReference Include="..\Rogero.ReactiveSourceGenerator\Rogero.ReactiveSourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ReactiveUI" Version="17.1.6" />
+  </ItemGroup>
+
+</Project>
