@@ -17,27 +17,34 @@ public class ReactivePropertyGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterPostInitializationOutput(ctx =>
+        try
         {
-            // Add the marker attribute.
-            //ctx.AddSource(
-            //    "MakeReactivePropertyAttribute.g.cs",
-            //    SourceText.From(MakeReactivePropertyAttributeSource.SourceText, Encoding.UTF8));
-        });
+            context.RegisterPostInitializationOutput(ctx =>
+            {
+                // Add the marker attribute.
+                //ctx.AddSource(
+                //    "MakeReactivePropertyAttribute.g.cs",
+                //    SourceText.From(MakeReactivePropertyAttributeSource.SourceText, Encoding.UTF8));
+            });
 
-        //Filter stage 1
-        IncrementalValuesProvider<FieldDeclarationSyntax> fieldDeclarations = context
-            .SyntaxProvider
-            .CreateSyntaxProvider(
-                predicate: (node,          _) => IsInterestingFieldDeclarationSyntax(node),
-                transform: (syntaxContext, _) => GetFieldDeclsWithOurAttribute(syntaxContext))
-            .Where(z => z is not null);
+            //Filter stage 1
+            IncrementalValuesProvider<FieldDeclarationSyntax> fieldDeclarations = context
+                .SyntaxProvider
+                .CreateSyntaxProvider(
+                    predicate: (node,          _) => IsInterestingFieldDeclarationSyntax(node),
+                    transform: (syntaxContext, _) => GetFieldDeclsWithOurAttribute(syntaxContext))
+                .Where(z => z is not null);
 
-        IncrementalValueProvider<(Compilation, ImmutableArray<FieldDeclarationSyntax>)> compilationAndFields
-            = context.CompilationProvider.Combine(fieldDeclarations.Collect());
+            IncrementalValueProvider<(Compilation, ImmutableArray<FieldDeclarationSyntax>)> compilationAndFields
+                = context.CompilationProvider.Combine(fieldDeclarations.Collect());
 
-        context.RegisterSourceOutput(compilationAndFields,
-                                     (productionContext, tuple) => Execute(tuple.Item1, tuple.Item2, productionContext));
+            context.RegisterSourceOutput(compilationAndFields,
+                (productionContext, tuple) => Execute(tuple.Item1, tuple.Item2, productionContext));
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 
     private static bool IsInterestingFieldDeclarationSyntax(SyntaxNode node)
@@ -47,65 +54,82 @@ public class ReactivePropertyGenerator : IIncrementalGenerator
 
     private static FieldDeclarationSyntax GetFieldDeclsWithOurAttribute(GeneratorSyntaxContext syntaxContext)
     {
-        if (!Debugger.IsAttached && ShouldDebug)
-            Debugger.Launch();
-        var fieldDeclarationSyntax = (FieldDeclarationSyntax) syntaxContext.Node;
-
-        // loop through all the attributes on the method
-        foreach (AttributeListSyntax attributeListSyntax in fieldDeclarationSyntax.AttributeLists)
+        try
         {
-            foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
+            if (!Debugger.IsAttached && ShouldDebug)
+                Debugger.Launch();
+            var fieldDeclarationSyntax = (FieldDeclarationSyntax) syntaxContext.Node;
+
+            // loop through all the attributes on the method
+            foreach (AttributeListSyntax attributeListSyntax in fieldDeclarationSyntax.AttributeLists)
             {
-                if (syntaxContext.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
+                foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
                 {
-                    // weird, we couldn't get the symbol, ignore it
-                    continue;
-                }
+                    if (syntaxContext.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
+                    {
+                        // weird, we couldn't get the symbol, ignore it
+                        continue;
+                    }
 
-                INamedTypeSymbol attributeContainingTypeSymbol = attributeSymbol.ContainingType;
-                string           attributeName                      = attributeContainingTypeSymbol.Name;
+                    INamedTypeSymbol attributeContainingTypeSymbol = attributeSymbol.ContainingType;
+                    string           attributeName                      = attributeContainingTypeSymbol.Name;
 
-                if (attributeName == MakePropertyReactiveAttributeName)
-                {
-                    return fieldDeclarationSyntax;
+                    if (attributeName == MakePropertyReactiveAttributeName)
+                    {
+                        return fieldDeclarationSyntax;
+                    }
                 }
             }
+
+            // we didn't find the attribute we were looking for
+            return null;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
         }
 
-        // we didn't find the attribute we were looking for
         return null;
     }
 
     private void Execute(Compilation compilation, ImmutableArray<FieldDeclarationSyntax> fields, SourceProductionContext context)
     {
-        if(AddDebugFakeClass) context.AddSource("mytest.g.cs", $"public class TestingAbc{{ /* {DateTime.Now} */ }}");
-        
-        if (!Debugger.IsAttached && ShouldDebug)
-            Debugger.Launch();
-        
-        if (fields.IsDefaultOrEmpty) return;
-
-        IEnumerable<FieldDeclarationSyntax> distinctFields = fields.Distinct();
-
-        var cancelToken = context.CancellationToken;
-        List<PropertyGenerationInfo> propertyGenerationInfos =CreatePropertyGenerationInfo(compilation, fields, cancelToken);
-
-        var propertiesByClass = propertyGenerationInfos
-            .GroupBy(z => z.FullClassName)
-            .ToList();
-
-        var sb      = new StringBuilder();
-        int counter = 1;
-        foreach (var classProperties in propertiesByClass)
+        try
         {
-            var result     = SourceCodeHelper.GetSourceCode(sb, classProperties.ToList());
-            var className  = classProperties.Key;
-            var sourceText = SourceText.From(result, Encoding.UTF8);
+            if(AddDebugFakeClass) context.AddSource("mytest.g.cs", $"public class TestingAbc{{ /* {DateTime.Now} */ }}");
+        
+            if (!Debugger.IsAttached && ShouldDebug)
+                Debugger.Launch();
+        
+            if (fields.IsDefaultOrEmpty) return;
+
+            IEnumerable<FieldDeclarationSyntax> distinctFields = fields.Distinct();
+
+            var cancelToken = context.CancellationToken;
+            List<PropertyGenerationInfo> propertyGenerationInfos =CreatePropertyGenerationInfo(compilation, fields, cancelToken);
+
+            var propertiesByClass = propertyGenerationInfos
+                .Distinct()
+                .GroupBy(z => z.FullClassName)
+                .ToList();
+
+            var sb      = new StringBuilder();
+            int counter = 1;
+            foreach (var classProperties in propertiesByClass)
+            {
+                var result     = SourceCodeHelper.GetSourceCode(sb, classProperties.ToList());
+                var className  = classProperties.Key;
+                var sourceText = SourceText.From(result, Encoding.UTF8);
             
-            if(!string.IsNullOrWhiteSpace(result))
-                context.AddSource("Gen_" + counter + ".g.cs", sourceText);
-            counter++;
-            sb.Clear();
+                if(!string.IsNullOrWhiteSpace(result))
+                    context.AddSource("Gen_" + counter + ".g.cs", sourceText);
+                counter++;
+                sb.Clear();
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
         }
     }
 
@@ -113,24 +137,32 @@ public class ReactivePropertyGenerator : IIncrementalGenerator
                                                                  ImmutableArray<FieldDeclarationSyntax> fields,
                                                                  CancellationToken                      cancellationToken)
     {
-        var results = new List<PropertyGenerationInfo>();
-
-        foreach (var fieldDeclSyntax in fields)
+        try
         {
-            var semanticModel = compilation.GetSemanticModel(fieldDeclSyntax.SyntaxTree);
-            foreach (var variableDeclaratorSyntax in fieldDeclSyntax.Declaration.Variables)
+            var results = new List<PropertyGenerationInfo>();
+
+            foreach (var fieldDeclSyntax in fields)
             {
-                if (cancellationToken.IsCancellationRequested) return results;
+                var semanticModel = compilation.GetSemanticModel(fieldDeclSyntax.SyntaxTree);
+                foreach (var variableDeclaratorSyntax in fieldDeclSyntax.Declaration.Variables)
+                {
+                    if (cancellationToken.IsCancellationRequested) return results;
                 
-                IFieldSymbol fieldSymbol = semanticModel.GetDeclaredSymbol(variableDeclaratorSyntax) as IFieldSymbol;
+                    IFieldSymbol fieldSymbol = semanticModel.GetDeclaredSymbol(variableDeclaratorSyntax) as IFieldSymbol;
 
-                if (fieldSymbol is null) continue;
+                    if (fieldSymbol is null) continue;
 
-                var propertyToGenerate = new PropertyGenerationInfo(fieldSymbol);
-                results.Add(propertyToGenerate);
+                    var propertyToGenerate = new PropertyGenerationInfo(fieldSymbol);
+                    results.Add(propertyToGenerate);
+                }
             }
-        }
 
-        return results;
+            return results;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new List<PropertyGenerationInfo>();
+        }
     }
 }

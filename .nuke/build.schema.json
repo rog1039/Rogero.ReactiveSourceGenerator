@@ -42,9 +42,18 @@
             "VSCode"
           ]
         },
+        "MygetPrivateToken": {
+          "type": "string"
+        },
+        "MygetPrivateUrl": {
+          "type": "string"
+        },
         "NoLogo": {
           "type": "boolean",
           "description": "Disables displaying the NUKE logo"
+        },
+        "NuGetToken": {
+          "type": "string"
         },
         "Partition": {
           "type": "string",
@@ -73,6 +82,8 @@
             "enum": [
               "Clean",
               "Compile",
+              "Pack",
+              "PushToMyget",
               "Restore"
             ]
           }
@@ -89,6 +100,8 @@
             "enum": [
               "Clean",
               "Compile",
+              "Pack",
+              "PushToMyget",
               "Restore"
             ]
           }

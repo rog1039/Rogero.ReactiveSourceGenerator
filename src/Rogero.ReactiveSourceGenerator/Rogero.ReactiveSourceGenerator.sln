@@ -10,6 +10,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rogero.ReactiveSourceGenera
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\..\build\_build.csproj", "{4C77F5DD-F5E9-448F-88B9-2CD300184717}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rogero.ReactiveSourceGenerator.NugetTest", "Rogero.ReactiveSourceGenerator.NugetTest\Rogero.ReactiveSourceGenerator.NugetTest.csproj", "{26DEFF40-DD39-4CF3-936A-3637076418AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SlnFiles", "SlnFiles", "{570A14AF-707A-40B9-BEC7-B1DA334BEDE6}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\myget_push.bat = ..\..\myget_push.bat
+		..\..\GitVersion.yml = ..\..\GitVersion.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,5 +42,9 @@ Global
 		{3A5E74F3-E724-4631-9230-35B72928403E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A5E74F3-E724-4631-9230-35B72928403E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A5E74F3-E724-4631-9230-35B72928403E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26DEFF40-DD39-4CF3-936A-3637076418AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26DEFF40-DD39-4CF3-936A-3637076418AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26DEFF40-DD39-4CF3-936A-3637076418AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26DEFF40-DD39-4CF3-936A-3637076418AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

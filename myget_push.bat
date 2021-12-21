@@ -1,0 +1,1 @@
+dotnet nuget push  .\Rogero.ReactiveSourceGenerator.1.0.0.nupkg -s "https://www.myget.org/F/progerop/auth/08c5805d-ebbb-4edf-82f9-279dd8a6d16d/api/v3/index.json"

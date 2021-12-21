@@ -19,7 +19,7 @@ public partial class ").Append(fields.First().ClassName);
         sb.Append(@"
 {");
         
-        foreach (var property in fields)
+        foreach (var property in fields.Distinct())
         {
             sb.Append(@"
     public ").Append(property._fieldSymbol.Type).Append(" ").Append(property.PropertyName);
